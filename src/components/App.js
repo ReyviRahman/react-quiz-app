@@ -3,10 +3,14 @@ import Header from './Header'
 import Main from './Main'
 import axios from 'axios'
 import Loader from './Loader'
+import Error from './Error'
+import StartScreen from './StartScreen'
+import Question from './Question'
 
 const initialState = {
   questions: [],
-  status: 'loading'
+  status: 'loading',
+  index: 0,
 }
 
 const reducer = (state, action) => {
@@ -22,13 +26,20 @@ const reducer = (state, action) => {
         ...state,
         status: 'error'
       };
+    case 'start':
+      return {
+        ...state,
+        status: 'active'
+      }
     default:
       throw new Error('Action Unknown');
   }
 }
 
 const App = () => {
-  const [{question, status}, dispatch] = useReducer(reducer, initialState)
+  const [{questions, status, index}, dispatch] = useReducer(reducer, initialState)
+
+  const numQuestions = questions.length
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,7 +47,7 @@ const App = () => {
         const response = await axios.get('http://localhost:8000/questions')
         dispatch({type: 'dataReceived', payload: response.data})
       } catch (error) {
-        dispatch({type: 'dateFailed'})
+        dispatch({type: 'dataFailed'})
       }
     }
 
@@ -49,6 +60,8 @@ const App = () => {
       <Main>
         {status === 'loading' && <Loader />}
         {status === 'error' && <Error />}
+        {status === 'ready' && <StartScreen numQuestions={numQuestions} dispatch={dispatch} />}
+        {status === 'active' && <Question question = {questions[index]}/>}
       </Main>
     </div>
   )
